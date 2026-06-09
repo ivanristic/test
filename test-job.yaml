@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: git-fetched-api-tests
+  namespace: my-app
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      # 1. Download the tests from Git into a shared memory volume
+      initContainers:
+      - name: git-cloner
+        image: alpine/git:2.45.2 # Ultra-lightweight Git image
+        command:
+        - /bin/sh
+        - -c
+        - |
+          # Clone only the latest commit of the branch to keep it fast
+          git clone --depth 1 https://github.com/ivanristic/collections.git
+        volumeMounts:
+        - name: shared-volume
+          mountPath: /shared-tests
+
+      # 2. Run Newman using the downloaded files
+      containers:
+      - name: newman-runner
+        image: postman/newman:6.1.3-alpine
+        command: ["newman", "run", "/tests/path/to/smoke-tests.postman_collection.json"]
+        args:
+        - "--env-var"
+        - "baseUrl=http://localhost:5000"
+        volumeMounts:
+        - name: shared-volume
+          mountPath: /tests
+
+      restartPolicy: Never
+      volumes:
+      - name: shared-volume
+        emptyDir: {} # Temporary storage wiped when the job finishes
+  backoffLimit: 0
