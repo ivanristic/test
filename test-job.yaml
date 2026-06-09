@@ -12,13 +12,13 @@ spec:
       # 1. Download the tests from Git into a shared memory volume
       initContainers:
       - name: git-cloner
-        image: alpine/git:2.45.2 # Ultra-lightweight Git image
+        image: alpine/git:2.45.2 
         command:
         - /bin/sh
         - -c
         - |
-          # Clone only the latest commit of the branch to keep it fast
-          git clone --depth 1 https://github.com/ivanristic/collections.git
+          # FIX 1: Clone directly into the mounted volume
+          git clone --depth 1 https://github.com/ivanristic/collections.git /shared-tests
         volumeMounts:
         - name: shared-volume
           mountPath: /shared-tests
@@ -27,10 +27,12 @@ spec:
       containers:
       - name: newman-runner
         image: postman/newman:6.1.3-alpine
-        command: ["newman", "run", "/tests/path/to/smoke-tests.postman_collection.json"]
+        # FIX 2: Ensure the path matches the repo structure relative to the mount
+        command: ["newman", "run", "/tests/smoke-tests.postman_collection.json"]
         args:
         - "--env-var"
-        - "baseUrl=http://localhost:5000"
+        # FIX 3: Change localhost to the internal Kubernetes Service name
+        - "baseUrl=http://your-registry-service-name:5000"
         volumeMounts:
         - name: shared-volume
           mountPath: /tests
@@ -38,5 +40,5 @@ spec:
       restartPolicy: Never
       volumes:
       - name: shared-volume
-        emptyDir: {} # Temporary storage wiped when the job finishes
+        emptyDir: {} 
   backoffLimit: 0
