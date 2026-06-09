@@ -32,7 +32,7 @@ spec:
         args:
         - "--env-var"
         # FIX 3: Change localhost to the internal Kubernetes Service name
-        - "baseUrl=http://your-registry-service-name:5000"
+        - "baseUrl=http://localhost:5000"
         volumeMounts:
         - name: shared-volume
           mountPath: /tests
