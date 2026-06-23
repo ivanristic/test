@@ -9,7 +9,7 @@ metadata:
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   entrypoint: registry-test-pipeline
-  
+  serviceAccountName: workflow-runner-sa
   # Define a shared Volume Claim Template for the workflow lifecycle
   volumeClaimTemplates:
   - metadata:
