@@ -71,6 +71,7 @@ spec:
 
     # --- EXIT HANDLER: Email Report ---
     - name: send-email-report
+      # Escaped from Helm processing using string literals
       when: '{{ "{{workflow.status}}" }} == Failed || {{ "{{workflow.status}}" }} == Error'
       container:
         image: pyfound/balloons:latest
@@ -85,8 +86,8 @@ spec:
               --data '{
                 "personalizations": [{"to": [{"email": "devops-team@example.com"}]}],
                 "from": {"email": "ivanristich@hotmail.com"},
-                "subject": "❌ Argo Workflow Failed: {{workflow.name}}",
-                "content": [{"type": "text/plain", "value": "The test pipeline failed in namespace {{workflow.namespace}}. Please check the Argo dashboard."}]
+                "subject": "❌ Argo Workflow Failed: {{ "{{workflow.name}}" }}",
+                "content": [{"type": "text/plain", "value": "The test pipeline failed in namespace {{ "{{workflow.namespace}}" }}. Please check the Argo dashboard."}]
               }'
         env:
           - name: SENDGRID_API_KEY
