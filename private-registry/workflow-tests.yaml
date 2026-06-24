@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   name: git-fetched-api-tests-workflow
-  namespace: registry
+  namespace: repository
   annotations:
     # Keeps your Argo CD lifecycle hook so it runs PostSync
     argocd.argoproj.io/hook: PostSync
@@ -27,7 +27,6 @@ spec:
         value: "true"
       - name: run-step-3
         value: "true"
-        
   templates:
   - name: registry-test-pipeline
     # This enforces exact linear execution: Step 1 -> Step 2 -> Step 3
