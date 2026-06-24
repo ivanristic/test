@@ -74,7 +74,7 @@ spec:
       # Escaped from Helm processing using string literals
       when: '{{ "{{workflow.status}}" }} == Failed || {{ "{{workflow.status}}" }} == Error'
       container:
-        image: pyfound/balloons:latest
+        image: curlimages/curl:8.7.1
         command: [/bin/sh, -c]
         args:
           - |
