@@ -71,7 +71,7 @@ spec:
 
     # --- EXIT HANDLER: Email Report ---
     - name: send-email-report
-      when: "{{workflow.status}} == Failed || {{workflow.status}} == Error"
+      when: '{{workflow.status}} == Failed || {{workflow.status}} == Error'
       container:
         image: pyfound/balloons:latest
         command: [/bin/sh, -c]
