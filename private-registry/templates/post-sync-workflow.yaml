@@ -32,7 +32,7 @@ spec:
         image: quay.io/skopeo/stable:v1.15
         env:
           - name: REGISTRY_HOST
-            value: "http://registry-private-registry:5000"
+            value: "registry-private-registry:5000"
           - name: REGISTRY_USER
             value: "line"
           - name: REGISTRY_PASS
