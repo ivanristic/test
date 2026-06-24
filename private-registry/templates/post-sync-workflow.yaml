@@ -14,13 +14,13 @@ spec:
         - - name: test-registry
             template: registry-tester
             # Escaped for Helm processing:
-            when: "{{ .Values.tests.runStep2 }}" == true'
+            when: '{{ .Values.tests.runStep2 }} == true'
         - - name: run-newman
             template: newman-runner
             # Escaped for Helm processing:
-            when: "{{ .Values.tests.runStep3 }}" == true'
+            when: '{{ .Values.tests.runStep3 }} == true'
 
-    # --- STEP 2: Skopeo Push/Pull Registry Test ---
+    # --- STEP 2: Skopeo Push/Pull Registry Test (Indentation Fixed) ---
     - name: registry-tester
       container:
         image: quay.io/skopeo/stable:v1.15
@@ -49,7 +49,7 @@ spec:
               docker://${REGISTRY_HOST}/test-scope/alpine-test:verify
             echo "=== Registry Passed ==="
 
-    # --- STEP 3: Newman API Verification ---
+    # --- STEP 3: Newman API Verification (Indentation Fixed) ---
     - name: newman-runner
       inputs:
         artifacts:
