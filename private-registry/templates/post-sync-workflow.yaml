@@ -69,4 +69,4 @@ spec:
         command: [newman, run, /tests/smoke-tests.postman_collection.json]
         args:
           - "--env-var"
-          - "baseUrl=http://private-registry.registry.svc.cluster.local:5000"
+          - "baseUrl=http://private-registry:5000"
