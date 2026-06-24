@@ -19,10 +19,12 @@ spec:
       steps:
         - - name: test-registry
             template: registry-tester
-            when: "{{workflow.parameters.run-step-2}} == true"
+            # Escaped for Helm processing:
+            when: '{{ `{{workflow.parameters.run-step-2}}` }} == true'
         - - name: run-newman
             template: newman-runner
-            when: "{{workflow.parameters.run-step-3}} == true"
+            # Escaped for Helm processing:
+            when: '{{ `{{workflow.parameters.run-step-3}}` }} == true'
 
     # --- STEP 2: Skopeo Push/Pull Registry Test ---
     - name: registry-tester
@@ -30,7 +32,7 @@ spec:
         image: quay.io/skopeo/stable:v1.15
         env:
           - name: REGISTRY_HOST
-            value: "private-registry.registry.svc.cluster.local:5000" # FQDN ensuring connection works across namespaces
+            value: "private-registry.registry.svc.cluster.local:5000"
           - name: REGISTRY_USER
             value: "line"
           - name: REGISTRY_PASS
