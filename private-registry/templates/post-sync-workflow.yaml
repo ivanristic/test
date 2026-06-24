@@ -14,11 +14,11 @@ spec:
         - - name: test-registry
             template: registry-tester
             # Escaped for Helm processing:
-            when: {{ .Values.tests.run-step-2 }} == true'
+            when: "{{ .Values.tests.run-step-2 }}" == true'
         - - name: run-newman
             template: newman-runner
             # Escaped for Helm processing:
-            when: {{ .Values.tests.run-step-3 }} == true'
+            when: "{{ .Values.tests.run-step-3 }}" == true'
 
     # --- STEP 2: Skopeo Push/Pull Registry Test ---
     - name: registry-tester
