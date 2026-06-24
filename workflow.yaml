@@ -26,7 +26,7 @@ spec:
       - name: run-step-1
         value: "true"
       - name: run-step-2
-        value: "true"
+        value: "false"
       - name: run-step-3
         value: "true"
         
