@@ -10,7 +10,7 @@ service:
   port: 5000
 tests:
   runStep2: true
-  runStep3: false
+  runStep3: true
 # Note: emptyDir means images will be lost if the pod restarts.
 # For production, consider adding a PersistentVolumeClaim (PVC) option here.
 storage:
