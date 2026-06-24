@@ -8,12 +8,6 @@ metadata:
 spec:
   entrypoint: registry-test-pipeline
   serviceAccountName: workflow-runner-sa
-  arguments:
-    parameters:
-      - name: run-step-2
-        value: "true"
-      - name: run-step-3
-        value: "true"
   templates:
     - name: registry-test-pipeline
       steps:
