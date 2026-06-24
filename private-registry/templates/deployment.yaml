@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-private-registry
   labels:
-    app: private-registry
+    app: {{ .Release.Name }}-private-registry
     release: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.replicaCount }}
