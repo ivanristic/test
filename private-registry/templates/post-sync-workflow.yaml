@@ -8,6 +8,10 @@ metadata:
 spec:
   entrypoint: registry-test-pipeline
   serviceAccountName: workflow-runner-sa
+  
+  # Hooking up the exit handler block
+  onExit: send-email-report
+
   templates:
     - name: registry-test-pipeline
       steps:
@@ -20,7 +24,7 @@ spec:
             # Escaped for Helm processing:
             when: '{{ .Values.tests.runStep3 }} == true'
 
-    # --- STEP 2: Skopeo Push/Pull Registry Test (Indentation Fixed) ---
+    # --- STEP 2: Skopeo Push/Pull Registry Test ---
     - name: registry-tester
       container:
         image: quay.io/skopeo/stable:v1.15
@@ -49,7 +53,7 @@ spec:
               docker://${REGISTRY_HOST}/test-scope/alpine-test:verify
             echo "=== Registry Passed ==="
 
-    # --- STEP 3: Newman API Verification (Indentation Fixed) ---
+    # --- STEP 3: Newman API Verification ---
     - name: newman-runner
       inputs:
         artifacts:
@@ -64,3 +68,29 @@ spec:
         args:
           - "--env-var"
           - "baseUrl=http://registry-private-registry:5000"
+
+    # --- EXIT HANDLER: Email Report ---
+    - name: send-email-report
+      when: "{{workflow.status}} == Failed || {{workflow.status}} == Error"
+      container:
+        image: pyfound/balloons:latest
+        command: [/bin/sh, -c]
+        args:
+          - |
+            echo "Sending failure notification email..."
+            curl --request POST \
+              --url https://api.sendgrid.com/v3/mail/send \
+              --header "Authorization: Bearer ${SENDGRID_API_KEY}" \
+              --header "Content-Type: application/json" \
+              --data '{
+                "personalizations": [{"to": [{"email": "devops-team@example.com"}]}],
+                "from": {"email": "ivanristich@hotmail.com"},
+                "subject": "❌ Argo Workflow Failed: {{workflow.name}}",
+                "content": [{"type": "text/plain", "value": "The test pipeline failed in namespace {{workflow.namespace}}. Please check the Argo dashboard."}]
+              }'
+        env:
+          - name: SENDGRID_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: email-credentials
+                key: api-key
