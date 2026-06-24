@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-private-registry
+  labels:
+    app: private-registry
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: private-registry
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: private-registry
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: registry
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          volumeMounts:
+            - name: registry-storage
+              mountPath: /var/lib/registry
+      volumes:
+        - name: registry-storage
+        {{- if .Values.storage.useEmptyDir }}
+          emptyDir: {}
+        {{- end }}

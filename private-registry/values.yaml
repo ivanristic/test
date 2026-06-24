@@ -1,0 +1,15 @@
+replicaCount: 1
+
+image:
+  repository: registry
+  tag: "2"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 5000
+
+# Note: emptyDir means images will be lost if the pod restarts.
+# For production, consider adding a PersistentVolumeClaim (PVC) option here.
+storage:
+  useEmptyDir: true

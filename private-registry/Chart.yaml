@@ -1,0 +1,6 @@
+apiVersion: v2
+name: private-registry
+description: A Helm chart for deploying a private Docker registry
+type: application
+version: 0.1.0
+appVersion: "2"
