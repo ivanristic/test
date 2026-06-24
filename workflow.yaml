@@ -19,17 +19,30 @@ spec:
       resources:
         requests:
           storage: 64Mi
-
+  arguments:
+  # we parametrize tests steps, default is to run all tests, values can be passed by command
+  # argo submit selective-workflow.yaml -p run-step-1=false -p run-step-2=true -p run-step-3=false 
+    parameters:
+      - name: run-step-1
+        value: "true"
+      - name: run-step-2
+        value: "true"
+      - name: run-step-3
+        value: "true"
+        
   templates:
   - name: registry-test-pipeline
     # This enforces exact linear execution: Step 1 -> Step 2 -> Step 3
     steps:
     - - name: clone-repo
         template: git-cloner
+        when: "{{workflow.parameters.run-step-1}} == true"
     - - name: test-registry
         template: registry-tester
+        when: "{{workflow.parameters.run-step-2}} == true"
     - - name: run-newman
         template: newman-runner
+        when: "{{workflow.parameters.run-step-3}} == true"
 
   # --- STEP 1: Clone Git Repo ---
   - name: git-cloner
