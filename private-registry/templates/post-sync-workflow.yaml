@@ -32,7 +32,7 @@ spec:
         image: quay.io/skopeo/stable:v1.15
         env:
           - name: REGISTRY_HOST
-            value: "http://private-registry:5000"
+            value: "http://registry-private-registry:5000"
           - name: REGISTRY_USER
             value: "line"
           - name: REGISTRY_PASS
@@ -69,4 +69,4 @@ spec:
         command: [newman, run, /tests/smoke-tests.postman_collection.json]
         args:
           - "--env-var"
-          - "baseUrl=http://private-registry:5000"
+          - "baseUrl=http://registry-private-registry:5000"
