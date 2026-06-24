@@ -24,7 +24,7 @@ spec:
   # argo submit selective-workflow.yaml -p run-step-1=false -p run-step-2=true -p run-step-3=false 
     parameters:
       - name: run-step-2
-        value: "false"
+        value: "true"
       - name: run-step-3
         value: "true"
         
