@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: registry-private-app
+  namespace: argocd # Must be the namespace where ArgoCD is running
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/ivanristic/test.git'
+    targetRevision: helm
+    path: private-registry
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: repository
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
