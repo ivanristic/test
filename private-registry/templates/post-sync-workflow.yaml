@@ -8,7 +8,7 @@ metadata:
 spec:
   entrypoint: registry-test-pipeline
   serviceAccountName: workflow-runner-sa
-  
+  archiveLocation: { archiveLogs: false }
   # Hooking up the exit handler block
   onExit: send-email-report
 
