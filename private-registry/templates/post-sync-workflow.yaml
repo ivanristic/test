@@ -12,6 +12,11 @@ spec:
   # Hooking up the exit handler block
   onExit: send-email-report
 
+  # Define a local shared volume for git files so we don't need an artifact driver
+  volumes:
+    - name: git-workspace
+      emptyDir: {}
+
   templates:
     - name: registry-test-pipeline
       steps:
@@ -43,6 +48,7 @@ spec:
             skopeo copy \
               --dest-creds="${REGISTRY_USER}:${REGISTRY_PASS}" \
               --dest-tls-verify=false \
+              --dest-io-timeout=30s \
               docker://docker.io/library/alpine:latest \
               docker://${REGISTRY_HOST}/test-scope/alpine-test:verify
 
@@ -55,19 +61,26 @@ spec:
 
     # --- STEP 3: Newman API Verification ---
     - name: newman-runner
-      inputs:
-        artifacts:
-          - name: test-repository
-            path: /tests
-            git:
-              repo: "https://github.com/ivanristic/collections.git"
-              revision: "main"
+      # Using an initContainer to fetch git repository natively
+      initContainers:
+        - name: git-cloner
+          image: alpine/git:2.45.2
+          command: [sh, -c]
+          args:
+            - |
+              git clone --depth 1 -b main https://github.com/ivanristic/collections.git /tests
+          volumeMounts:
+            - name: git-workspace
+              mountPath: /tests
       container:
         image: postman/newman:6.1.3-alpine
         command: [newman, run, /tests/smoke-tests.postman_collection.json]
         args:
           - "--env-var"
           - "baseUrl=http://registry-private-registry:5000"
+        volumeMounts:
+          - name: git-workspace
+            mountPath: /tests
 
     # --- EXIT HANDLER: Email Report ---
     - name: send-email-report
