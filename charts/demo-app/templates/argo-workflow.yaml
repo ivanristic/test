@@ -13,7 +13,7 @@ spec:
   arguments:
     parameters:
       - name: target-url
-        value: "http://demo-app.demo-testing.svc.cluster.local"
+        value: "http://demo-app-workflow.demo-testing.svc"
       - name: repo-url
         value: "https://github.com/ivanristic/test.git"
       - name: repo-revision
