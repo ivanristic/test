@@ -1,31 +1,14 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+apiVersion: v1
+kind: ServiceAccount
 metadata:
-  name: workflow-kube-checker
-  namespace: demo-testing
-rules:
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "watch"]
+  name: demo-pipeline-sa
+  namespace: argo
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: workflow-kube-checker-binding
-  namespace: demo-testing
-subjects:
-  - kind: ServiceAccount
-    name: argo-workflow # Standard default service account name for workflows
-    namespace: argo
-roleRef:
-  kind: Role
-  name: workflow-kube-checker
-  apiGroup: rbac.authorization.k8s.io
-----
+# Permissions inside the 'argo' namespace to manage its own testing lifecycle
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: argo-workflow-pod-manager
+  name: workflow-pod-orchestrator
   namespace: argo
 rules:
   - apiGroups: [""]
@@ -38,13 +21,38 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: argo-workflow-pod-manager-binding
+  name: workflow-pod-orchestrator-binding
   namespace: argo
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: demo-pipeline-sa
     namespace: argo
 roleRef:
   kind: Role
-  name: argo-workflow-pod-manager
+  name: workflow-pod-orchestrator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Permissions inside the 'demo-testing' namespace ONLY to track app readiness
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: workflow-app-checker
+  namespace: demo-testing
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: workflow-app-checker-binding
+  namespace: demo-testing
+subjects:
+  - kind: ServiceAccount
+    name: demo-pipeline-sa
+    namespace: argo
+roleRef:
+  kind: Role
+  name: workflow-app-checker
   apiGroup: rbac.authorization.k8s.io
