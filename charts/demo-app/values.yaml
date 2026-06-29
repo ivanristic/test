@@ -1,0 +1,20 @@
+replicaCount: 1
+
+image:
+  repository: node
+  tag: "18-alpine"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: demo-app.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
