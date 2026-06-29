@@ -1,11 +1,11 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  name: demo-app-git-pipeline
+  generateName: demo-app-git-pipeline-
   namespace: argo 
   annotations:
     argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
 spec:
   entrypoint: test-pipeline
   serviceAccountName: demo-pipeline-sa # CLEAN PRACTICE: Explicit non-default execution profile
