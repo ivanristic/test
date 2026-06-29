@@ -12,9 +12,25 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
+      # 1. Share a directory between the init container and the app container
+      volumes:
+        - name: node-modules
+          emptyDir: {}
+
+      # 2. Use an init container to install express before launching the app
+      initContainers:
+        - name: install-deps
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          workingDir: /app
+          command: ["sh", "-c", "npm install express"]
+          volumeMounts:
+            - name: node-modules
+              mountPath: /app/node_modules
+
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          workingDir: /app
           command:
             - "node"
             - "-e"
@@ -22,6 +38,10 @@ spec:
 {{ .Files.Get "app.js" | indent 14 }}
           ports:
             - containerPort: {{ .Values.service.targetPort }}
+          # 3. Mount the volume containing installed modules into the app path
+          volumeMounts:
+            - name: node-modules
+              mountPath: /app/node_modules
           livenessProbe:
             httpGet:
               path: /health
