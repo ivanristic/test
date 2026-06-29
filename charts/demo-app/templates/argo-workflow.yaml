@@ -5,7 +5,7 @@ metadata:
   namespace: argo 
   annotations:
     argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded,BeforeHookCreation
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   entrypoint: test-pipeline
   serviceAccountName: demo-pipeline-sa # CLEAN PRACTICE: Explicit non-default execution profile
