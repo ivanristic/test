@@ -21,3 +21,30 @@ roleRef:
   kind: Role
   name: workflow-kube-checker
   apiGroup: rbac.authorization.k8s.io
+----
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argo-workflow-pod-manager
+  namespace: argo
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/exec"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["create", "delete", "get", "list", "watch", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: argo-workflow-pod-manager-binding
+  namespace: argo
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: argo
+roleRef:
+  kind: Role
+  name: argo-workflow-pod-manager
+  apiGroup: rbac.authorization.k8s.io
