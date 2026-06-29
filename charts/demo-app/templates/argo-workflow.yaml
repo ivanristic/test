@@ -99,7 +99,7 @@ spec:
 
     - name: run-load
       container:
-        image: rakyll/hey:latest
+        image: fortio/fortio:1.57.0
         command: [sh, -c]
         args:
           - |
