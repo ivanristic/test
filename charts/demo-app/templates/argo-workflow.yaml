@@ -73,7 +73,7 @@ spec:
 
     - name: run-smoke
       container:
-        image: badouralix/curl:latest
+        image: curlimages/curl:7.85.0
         command: [sh, -c]
         args:
           - |
@@ -107,7 +107,7 @@ spec:
 
     - name: run-security-header-check
       container:
-        image: badouralix/curl:latest
+        image: curlimages/curl:7.85.0
         command: [sh, -c]
         args:
           - |
