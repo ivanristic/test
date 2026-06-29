@@ -3,6 +3,10 @@ kind: Workflow
 metadata:
   generateName: demo-app-git-pipeline-
   namespace: argo 
+  annotations:
+    # Optional: Integrates this as an Argo CD PostSync hook so it runs automatically after deployment
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
 spec:
   entrypoint: test-pipeline
   
@@ -58,9 +62,9 @@ spec:
         command: [sh, -c]
         args:
           - |
-            echo "Synchronizing workspace with branch: {{workflow.parameters.repo-revision}}..."
+            echo "Synchronizing workspace with branch: {{ `{{workflow.parameters.repo-revision}}` }}..."
             rm -rf /src/*
-            git clone -b {{workflow.parameters.repo-revision}} {{workflow.parameters.repo-url}} /src
+            git clone -b {{ `{{workflow.parameters.repo-revision}}` }} {{ `{{workflow.parameters.repo-url}}` }} /src
             echo "Repository successfully synchronized."
         volumeMounts:
           - name: workdir
@@ -83,7 +87,7 @@ spec:
         command: [sh, -c]
         args:
           - |
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" {{workflow.parameters.target-url}}/health)
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" {{ `{{workflow.parameters.target-url}}` }}/health)
             if [ "$STATUS" -ne 200 ]; then
               echo "Smoke Test Failed: /health returned status $STATUS"
               exit 1
@@ -99,7 +103,7 @@ spec:
           - |
             echo "Locating workspace test suite..."
             # Clean url prefix for variable mapping
-            BASE=$(echo "{{workflow.parameters.target-url}}" | sed 's|http://||')
+            BASE=$(echo "{{ `{{workflow.parameters.target-url}}` }}" | sed 's|http://||')
             
             # Runs collection.json out of the 'tests' path
             newman run /src/tests/collection.json --env-var "baseUrl=$BASE"
@@ -115,7 +119,7 @@ spec:
         args:
           - |
             echo "Initiating micro-load simulation..."
-            /hey -n 200 -c 10 {{workflow.parameters.target-url}}/api/v1/data
+            /hey -n 200 -c 10 {{ `{{workflow.parameters.target-url}}` }}/api/v1/data
 
     # 5. Security Audit: Server configuration leak assertions
     - name: run-security-header-check
@@ -125,7 +129,7 @@ spec:
         args:
           - |
             echo "Auditing runtime application headers..."
-            HEADERS=$(curl -sI {{workflow.parameters.target-url}}/api/v1/data)
+            HEADERS=$(curl -sI {{ `{{workflow.parameters.target-url}}` }}/api/v1/data)
             if echo "$HEADERS" | grep -iq "X-Powered-By"; then
               echo "Security Warning: Runtime stack details exposed via X-Powered-By header!"
             fi
