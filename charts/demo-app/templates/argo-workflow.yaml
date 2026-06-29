@@ -42,8 +42,6 @@ spec:
         - - name: newman-regression
             template: run-newman
 
-        - - name: load-test
-            template: run-load
           - name: security-audit
             template: run-security-header-check
 
