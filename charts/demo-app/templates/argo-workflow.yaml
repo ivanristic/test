@@ -1,8 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  generateName: demo-app-git-pipeline-
-  namespace: argo 
+  name: demo-app-git-pipeline 
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
@@ -35,16 +34,16 @@ spec:
             template: k8s-preflight
           - name: clone-git-repository
             template: clone-repo
-
+            when: '{{ .Values.tests.runStep2 }} == true'
         - - name: smoke-test
             template: run-smoke
-
+            when: '{{ .Values.tests.runStep2 }} == true'
         - - name: newman-regression
             template: run-newman
-
+            when: '{{ .Values.tests.runStep3 }} == true'
           - name: security-audit
             template: run-security-header-check
-
+            when: '{{ .Values.tests.runStep3 }} == true'
     # --- Step Templates ---
     - name: clone-repo
       container:
