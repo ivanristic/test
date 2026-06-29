@@ -10,6 +10,9 @@ spec:
     targetRevision: demo
     path: charts/demo-app
     helm:
+      parameters:
+        - name: target-url
+          value: "http://demo-app-workflow.demo-testing.svc"
       valueFiles:
         - values.yaml
   destination:
