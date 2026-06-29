@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: workflow-kube-checker
+  namespace: demo-testing
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: workflow-kube-checker-binding
+  namespace: demo-testing
+subjects:
+  - kind: ServiceAccount
+    name: argo-workflow # Standard default service account name for workflows
+    namespace: argo
+roleRef:
+  kind: Role
+  name: workflow-kube-checker
+  apiGroup: rbac.authorization.k8s.io

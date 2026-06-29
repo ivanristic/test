@@ -1,0 +1,132 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: demo-app-git-pipeline-
+  namespace: argo 
+spec:
+  entrypoint: test-pipeline
+  
+  # Global configuration parameters
+  arguments:
+    parameters:
+      - name: target-url
+        value: "http://demo-app.demo-testing.svc.cluster.local"
+      - name: repo-url
+        value: "https://github.com/ivanristic/test.git"
+      - name: repo-revision
+        value: "demo"
+
+  # Shared storage space to pass cloned Git files across pipeline steps
+  volumeClaimTemplates:
+    - metadata:
+        name: workdir
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 64Mi
+
+  templates:
+    - name: test-pipeline
+      steps:
+        # Step 1: Parallel preparation (Pre-flight checks and Git checkout)
+        - - name: wait-for-deployment
+            template: k8s-preflight
+          - name: clone-git-repository
+            template: clone-repo
+
+        # Step 2: Smoke Test
+        - - name: smoke-test
+            template: run-smoke
+
+        # Step 3: Newman regression test executed directly from the cloned workspace path
+        - - name: newman-regression
+            template: run-newman
+
+        # Step 4 & 5: High-concurrency load testing and configuration auditing executed in parallel
+        - - name: load-test
+            template: run-load
+          - name: security-audit
+            template: run-security-header-check
+
+    # --- Step Implementation Templates ---
+
+    # Git Cloning Step targeting the 'demo' branch
+    - name: clone-repo
+      container:
+        image: alpine/git:latest
+        command: [sh, -c]
+        args:
+          - |
+            echo "Synchronizing workspace with branch: {{workflow.parameters.repo-revision}}..."
+            rm -rf /src/*
+            git clone -b {{workflow.parameters.repo-revision}} {{workflow.parameters.repo-url}} /src
+            echo "Repository successfully synchronized."
+        volumeMounts:
+          - name: workdir
+            mountPath: /src
+
+    # 1. Preflight Check: Verifies the deployment rollout has completed safely
+    - name: k8s-preflight
+      container:
+        image: bitnami/kubectl:latest
+        command: [sh, -c]
+        args:
+          - |
+            echo "Checking deployment rollout status..."
+            kubectl rollout status deployment/demo-app-workflow -n demo-testing --timeout=60s
+
+    # 2. Smoke Test: Fast HTTP availability assertion
+    - name: run-smoke
+      container:
+        image: badouralix/curl:latest
+        command: [sh, -c]
+        args:
+          - |
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" {{workflow.parameters.target-url}}/health)
+            if [ "$STATUS" -ne 200 ]; then
+              echo "Smoke Test Failed: /health returned status $STATUS"
+              exit 1
+            fi
+            echo "Smoke Test Passed: Target service is responsive."
+
+    # 3. Newman Test: Runs your test suite directly out of the cloned /src/tests directory
+    - name: run-newman
+      container:
+        image: postman/newman:6-alpine
+        command: [sh, -c]
+        args:
+          - |
+            echo "Locating workspace test suite..."
+            # Clean url prefix for variable mapping
+            BASE=$(echo "{{workflow.parameters.target-url}}" | sed 's|http://||')
+            
+            # Runs collection.json out of the 'tests' path
+            newman run /src/tests/collection.json --env-var "baseUrl=$BASE"
+        volumeMounts:
+          - name: workdir
+            mountPath: /src
+
+    # 4. Load Test: Stress testing with 'hey' execution engine
+    - name: run-load
+      container:
+        image: rakyll/hey:latest
+        command: [sh, -c]
+        args:
+          - |
+            echo "Initiating micro-load simulation..."
+            /hey -n 200 -c 10 {{workflow.parameters.target-url}}/api/v1/data
+
+    # 5. Security Audit: Server configuration leak assertions
+    - name: run-security-header-check
+      container:
+        image: badouralix/curl:latest
+        command: [sh, -c]
+        args:
+          - |
+            echo "Auditing runtime application headers..."
+            HEADERS=$(curl -sI {{workflow.parameters.target-url}}/api/v1/data)
+            if echo "$HEADERS" | grep -iq "X-Powered-By"; then
+              echo "Security Warning: Runtime stack details exposed via X-Powered-By header!"
+            fi
+            echo "Header verification scan complete."
