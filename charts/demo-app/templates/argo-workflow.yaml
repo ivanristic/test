@@ -5,7 +5,7 @@ metadata:
   namespace: argo 
   annotations:
     argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded,BeforeHookCreation
 spec:
   entrypoint: test-pipeline
   serviceAccountName: demo-pipeline-sa # CLEAN PRACTICE: Explicit non-default execution profile
@@ -96,14 +96,6 @@ spec:
         volumeMounts:
           - name: workdir
             mountPath: /src
-
-    - name: run-load
-      container:
-        image: fortio/fortio:1.57.0
-        command: [sh, -c]
-        args:
-          - |
-            /hey -n 200 -c 10 {{ `{{workflow.parameters.target-url}}` }}/api/v1/data
 
     - name: run-security-header-check
       container:
