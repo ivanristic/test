@@ -13,7 +13,7 @@ spec:
   arguments:
     parameters:
       - name: target-url
-        value: "http://demo-app-workflow.demo-testing.svc"
+        value: "http://{{ .Release.Name }}.demo-testing.svc"
       - name: repo-url
         value: "https://github.com/ivanristic/test.git"
       - name: repo-revision
@@ -68,7 +68,7 @@ spec:
           - |
             echo "Waiting for rollout resource to exist..."
             for i in $(seq 1 12); do
-              if kubectl get rollout/demo-app-workflow -n demo-testing >/dev/null 2>&1; then
+              if kubectl get rollout/{{ .Release.Name }} -n demo-testing >/dev/null 2>&1; then
                 echo "Rollout resource found."
                 break
               fi
@@ -76,7 +76,7 @@ spec:
               sleep 5
             done
             echo "Checking rollout status..."
-            kubectl wait --for=jsonpath='{.status.phase}'=Healthy rollout/demo-app-workflow -n demo-testing --timeout=60s
+            kubectl wait --for=jsonpath='{.status.phase}'=Healthy rollout/{{ .Release.Name }} -n demo-testing --timeout=60s
 
     - name: run-smoke
       container:
