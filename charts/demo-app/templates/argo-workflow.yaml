@@ -8,6 +8,7 @@ metadata:
     argocd.argoproj.io/hook-delete-policy: HookSucceeded,BeforeHookCreation
 spec:
   entrypoint: test-pipeline
+  onExit: rollback-handler
   serviceAccountName: demo-pipeline-sa # CLEAN PRACTICE: Explicit non-default execution profile
   
   arguments:
@@ -115,3 +116,21 @@ spec:
               echo "Security Warning: Runtime stack details exposed via X-Powered-By header!"
             fi
             echo "Header verification scan complete."
+
+    - name: rollback-handler
+      steps:
+        - - name: abort-rollout
+            template: run-abort
+            when: "{{ `{{workflow.status}}` }} == Failed || {{ `{{workflow.status}}` }} == Error"
+
+    - name: run-abort
+      container:
+        image: bitnami/kubectl:latest
+        command: [sh, -c]
+        args:
+          - |
+            echo "Workflow failed/errored! Aborting rollout..."
+            if ! kubectl patch rollout/{{ .Release.Name }} -n demo-testing --type='merge' -p '{"status": {"abort": true}}'; then
+              echo "Retrying patch with --subresource=status..."
+              kubectl patch rollout/{{ .Release.Name }} -n demo-testing --subresource=status --type='merge' -p '{"status": {"abort": true}}'
+            fi
