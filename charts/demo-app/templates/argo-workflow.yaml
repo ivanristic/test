@@ -17,7 +17,7 @@ spec:
       - name: repo-url
         value: "https://github.com/ivanristic/test.git"
       - name: repo-revision
-        value: "demo"
+        value: "rollouts"
 
   volumeClaimTemplates:
     - metadata:
@@ -66,8 +66,17 @@ spec:
         command: [sh, -c]
         args:
           - |
-            echo "Checking deployment rollout status..."
-            kubectl rollout status deployment/demo-app-workflow -n demo-testing --timeout=60s
+            echo "Waiting for rollout resource to exist..."
+            for i in $(seq 1 12); do
+              if kubectl get rollout/demo-app-workflow -n demo-testing >/dev/null 2>&1; then
+                echo "Rollout resource found."
+                break
+              fi
+              echo "Waiting..."
+              sleep 5
+            done
+            echo "Checking rollout status..."
+            kubectl wait --for=jsonpath='{.status.phase}'=Healthy rollout/demo-app-workflow -n demo-testing --timeout=60s
 
     - name: run-smoke
       container:
