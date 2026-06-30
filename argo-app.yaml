@@ -1,18 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: demo-app-workflow
+  name: demo-app-rollout
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: 'https://github.com/ivanristic/test.git'
-    targetRevision: demo
+    targetRevision: rollouts
     path: charts/demo-app
     helm:
       parameters:
         - name: target-url
-          value: "http://demo-app-workflow.demo-testing.svc"
+          value: "http://demo-app-rollout.demo-testing.svc"
       valueFiles:
         - values.yaml
   destination:
