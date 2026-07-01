@@ -1,8 +1,8 @@
-replicaCount: 5
+replicaCount: 2
 
 image:
   repository: node
-  tag: "22-alpine"
+  tag: "18-alpine"
   pullPolicy: IfNotPresent
 
 service:
