@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: node
-  tag: "24-alpine"
+  tag: "22-alpine"
   pullPolicy: IfNotPresent
 
 service:
