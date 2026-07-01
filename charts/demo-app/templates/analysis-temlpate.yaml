@@ -1,0 +1,97 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: demo-app-analysis-template
+  namespace: demo-testing # Kept target application namespace
+spec:
+  args:
+    - name: target-url
+    - name: repo-url
+    - name: repo-revision
+    - name: rollout-name
+
+  metrics:
+    # STEP 1: Smoke Test (Replaces run-smoke template)
+    - name: smoke-test
+      successCondition: result == 0
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: curl-smoke
+                    image: curlimages/curl:7.85.0
+                    command: [sh, -c]
+                    args:
+                      - |
+                        STATUS=$(curl -s -o /dev/null -w "%{http_code}" {{ args.target-url }}/health)
+                        if [ "$STATUS" -ne 200 ]; then
+                          echo "Smoke Test Failed: /health returned status $STATUS"
+                          exit 1
+                        fi
+                        echo "Smoke Test Passed."
+
+    # STEP 2: Newman Regression (Replaces clone-repo & run-newman)
+    # Merged into 1 metric job because AnalysisRun doesn't share volumes across jobs natively
+    - name: newman-regression
+      successCondition: result == 0
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                restartPolicy: Never
+                # Using an init container to clone the repo inside the pod lifecycle
+                initContainers:
+                  - name: clone-git-repository
+                    image: alpine/git:latest
+                    command: [sh, -c]
+                    args:
+                      - |
+                        echo "Synchronizing workspace with branch: {{ args.repo-revision }}..."
+                        rm -rf /src/*
+                        git clone -b {{ args.repo-revision }} {{ args.repo-url }} /src
+                    volumeMounts:
+                      - name: workdir
+                        mountPath: /src
+                containers:
+                  - name: run-newman
+                    image: postman/newman:6-alpine
+                    command: [sh, -c]
+                    args:
+                      - |
+                        echo "Locating workspace test suite..."
+                        BASE=$(echo "{{ args.target-url }}" | sed 's|http://||')
+                        newman run /src/tests/collection.json --env-var "baseUrl=$BASE"
+                    volumeMounts:
+                      - name: workdir
+                        mountPath: /src
+                volumes:
+                  - name: workdir
+                    emptyDir: {}
+
+    # STEP 3: Security Header Check (Replaces run-security-header-check)
+    - name: security-audit
+      successCondition: result == 0
+      provider:
+        job:
+          spec:
+            backoffLimit: 0
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                  - name: security-check
+                    image: curlimages/curl:7.85.0
+                    command: [sh, -c]
+                    args:
+                      - |
+                        HEADERS=$(curl -sI {{ args.target-url }}/api/v1/data)
+                        if echo "$HEADERS" | grep -iq "X-Powered-By"; then
+                          echo "Security Warning: Runtime stack details exposed via X-Powered-By header!"
+                        fi
+                        echo "Header verification scan complete."

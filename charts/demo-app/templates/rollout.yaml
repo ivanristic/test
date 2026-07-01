@@ -8,7 +8,18 @@ spec:
     blueGreen:
       activeService: {{ .Release.Name }}
       previewService: {{ .Release.Name }}-preview
-      autoPromotionEnabled: false
+      prePromotionAnalysis:
+        templates:
+          - templateName: demo-app-analysis-template
+        args:
+          - name: target-url
+            value: "http://{{ .Release.Name }}-preview.demo-testing.svc"
+          - name: repo-url
+            value: "https://github.com/ivanristic/test.git"
+          - name: repo-revision
+            value: "rollouts"
+          - name: rollout-name
+            value: "{{ .Release.Name }}"
   selector:
     matchLabels:
       app: {{ .Release.Name }}
